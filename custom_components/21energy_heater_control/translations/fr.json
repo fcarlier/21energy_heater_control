@@ -13,13 +13,21 @@
     "step": {
       "user": {
         "title": "Connectez votre appareil 21energy !",
-        "description": "Pour commencer, entrez l'adresse IP locale ou le nom d'hôte de votre appareil 21energy.",
+        "description": "Pour commencer, entrez l'adresse IP (locale ou publique) ou le nom d'hôte de votre appareil 21energy.",
         "data": {
-          "host": "Hôte",
+          "host": "Hôte (IP ou nom d'hôte)",
+          "port": "Port",
+          "ssl": "Utiliser SSL (HTTPS)",
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe",
           "polling_interval": "Intervalle"
         },
         "data_description": {
           "host": "Le nom d'hôte ou l'adresse IP de votre appareil de chauffage.",
+          "port": "Le port de l'API (défaut: 80).",
+          "ssl": "Activez cette option si vous utilisez un proxy inversé avec HTTPS.",
+          "username": "Utilisateur pour l'authentification (si activée sur l'appareil).",
+          "password": "Mot de passe pour l'authentification.",
           "polling_interval": "Intervalle d'interrogation en secondes"
         }
       }

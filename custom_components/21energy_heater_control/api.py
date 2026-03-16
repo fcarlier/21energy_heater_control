@@ -62,12 +62,26 @@ class HeaterControlApiClient:
     def __init__(
         self,
         host: str,
+        port: int = 80,
+        use_ssl: bool = False,
+        username: str | None = None,
+        password: str | None = None,
         session: aiohttp.ClientSession,
     ) -> None:
         """API Client."""
         self._host = host
+        self._port = port
+        self._use_ssl = use_ssl
+        self._username = username
+        self._password = password
         self._session = session
         self._data = {}
+
+    @property
+    def _base_url(self) -> str:
+        """Base URL for the API."""
+        protocol = "https" if self._use_ssl else "http"
+        return f"{protocol}://{self._host}:{self._port}/21control"
 
     async def async_get_data(self) -> Any:
         """Get all data from the API."""
@@ -246,7 +260,7 @@ class HeaterControlApiClient:
 
         await self._api_wrapper(
             method="post",
-            url=f"http://{self._host}/21control/heater/powerTarget/{value}",
+            url=f"{self._base_url}/heater/powerTarget/{value}",
             headers={"Content-type": "application/json; charset=UTF-8"},
         )
 
@@ -254,7 +268,7 @@ class HeaterControlApiClient:
         """Enable or disable the Heater."""
         await self._api_wrapper(
             method="post",
-            url=f"http://{self._host}/21control/heater/enable",
+            url=f"{self._base_url}/heater/enable",
             data={"enabled": value},
             headers={"Content-type": "application/json; charset=UTF-8"},
         )
@@ -263,7 +277,7 @@ class HeaterControlApiClient:
         """Get data from the API."""
         ret = await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/status",
+            url=f"{self._base_url}/status",
         )
         LOGGER.debug("typeof ret: %s", type(ret))
         if "operational" in ret:
@@ -274,7 +288,7 @@ class HeaterControlApiClient:
         """Get heater data from the API."""
         ret = await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/status/system",
+            url=f"{self._base_url}/status/system",
         )
 
         product_id_raw = ret.get("productId") or ""
@@ -292,7 +306,7 @@ class HeaterControlApiClient:
         """Get heater pool config from the API."""
         ret = await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/heater/poolConfig",
+            url=f"{self._base_url}/heater/poolConfig",
         )
         LOGGER.debug("received poolConfig: %s", ret)
         data = {
@@ -307,7 +321,7 @@ class HeaterControlApiClient:
         """Get network status from the API."""
         ret = await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/heater/networkStatus",
+            url=f"{self._base_url}/heater/networkStatus",
         )
         data = {
             "type": re.sub(r"\d", "", ret.get("interface") or ""),
@@ -322,7 +336,7 @@ class HeaterControlApiClient:
         """Get data from the API."""
         return await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/{arg}",
+            url=f"{self._base_url}/{arg}",
         )
 
     async def _api_wrapper(
@@ -333,9 +347,17 @@ class HeaterControlApiClient:
         headers: dict | None = None,
     ) -> Any:
         """Get information from the API."""
-        request_headers = {"Host": self._host}
-        if headers:
-            request_headers.update(headers)
+        if headers is None:
+            headers = {}
+        
+        # Force Host header to bypass 'Invalid host header' security
+        if "Host" not in headers:
+            headers["Host"] = "localhost"
+
+        auth = None
+        if self._username and self._password:
+            auth = aiohttp.BasicAuth(self._username, self._password)
+
         try:
             async with asyncio.timeout(10):
                 response = await self._session.request(
@@ -343,6 +365,7 @@ class HeaterControlApiClient:
                     url=url,
                     headers=request_headers,
                     json=data,
+                    auth=auth,
                 )
                 _verify_response_or_raise(response)
                 responseType = "text"

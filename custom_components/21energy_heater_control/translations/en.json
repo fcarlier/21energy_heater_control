@@ -13,13 +13,21 @@
     "step": {
       "user": {
         "title": "Connect your 21energy device!",
-        "description": "To get started enter the local ip or hostname of your 21energy device.",
+        "description": "To get started enter the local IP (local or public) or hostname of your 21energy device.",
         "data": {
-          "host": "Host",
+          "host": "Host (IP or hostname)",
+          "port": "Port",
+          "ssl": "Use SSL (HTTPS)",
+          "username": "Username",
+          "password": "Password",
           "polling_interval": "Interval"
         },
         "data_description": {
           "host": "The hostname or IP-address of your Heater device.",
+          "port": "The API port (default: 80).",
+          "ssl": "Enable this if you use a reverse proxy with HTTPS.",
+          "username": "Username for authentication (if enabled on the device).",
+          "password": "Password for authentication.",
           "polling_interval": "Polling Interval in seconds"
         }
       }

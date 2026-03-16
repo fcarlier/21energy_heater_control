@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import HeaterControlApiClient, HeaterControlApiClientCommunicationError, HeaterControlApiClientOutdatedError
@@ -15,6 +15,10 @@ from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=80): int,
+        vol.Required(CONF_SSL, default=False): bool,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_POLLING_INTERVAL, default=30): int,
     }
 )
@@ -54,6 +58,10 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self._port: int | None = None
+        self._use_ssl: bool | None = None
+        self._username: str | None = None
+        self._password: str | None = None
         self._interval: int | None = None
 
     async def _async_step_user_base(
@@ -63,8 +71,15 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._host = user_input[CONF_HOST]
+            self._port = user_input[CONF_PORT]
+            self._use_ssl = user_input[CONF_SSL]
+            self._username = user_input[CONF_USERNAME]
+            self._password = user_input[CONF_PASSWORD]
             self._interval = user_input[CONF_POLLING_INTERVAL]
-            LOGGER.debug("_async_step_user_base => _host:%s", self._host)
+            LOGGER.debug(f"_async_step_user_base => _host:%s", self._host)
+            LOGGER.debug(f"_async_step_user_base => _port:%s", self._port)
+            LOGGER.debug(f"_async_step_user_base => _use_ssl:%s", self._use_ssl)
+            LOGGER.debug(f"_async_step_user_base => _username:%s", self._username)
             LOGGER.debug("_async_step_user_base => _interval:%s", self._interval)
 
             try:
@@ -124,6 +139,10 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         client = HeaterControlApiClient(
             host=self._host,
+            port=self._port,
+            use_ssl=self._use_ssl,
+            username=self._username,
+            password=self._password,
             session=async_get_clientsession(self.hass),
         )
         result = {}

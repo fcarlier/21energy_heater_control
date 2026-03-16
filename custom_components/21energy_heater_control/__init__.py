@@ -5,7 +5,14 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_PASSWORD, 
+    Platform,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
@@ -43,6 +50,10 @@ async def async_setup_entry(
     entry.runtime_data = HeaterControlData(
         client=HeaterControlApiClient(
             host=entry.data[CONF_HOST],
+            port=entry.data.get(CONF_PORT, 80),
+            use_ssl=entry.data.get(CONF_SSL, False),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
             session=async_get_clientsession(hass),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
