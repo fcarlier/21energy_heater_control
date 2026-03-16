@@ -347,12 +347,10 @@ class HeaterControlApiClient:
         headers: dict | None = None,
     ) -> Any:
         """Get information from the API."""
-        if headers is None:
-            headers = {}
-        
         # Force Host header to bypass 'Invalid host header' security
-        if "Host" not in headers:
-            headers["Host"] = "localhost"
+        request_headers = {"Host": "localhost"}
+        if headers:
+            request_headers.update(headers)
 
         auth = None
         if self._username and self._password:
